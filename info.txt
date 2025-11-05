@@ -1,0 +1,13 @@
+#python -m venv ll_env
+#.\ll_env\Scripts\Activate.ps1
+#python -m django startproject Blog .
+#python manage.py runserver
+#python manage.py migrate
+#python manage.py startapp blogs
+#pip install -r requirements.txt
+# python manage.py makemigrations learning_logs
+#http://localhost:8000/admin/
+#http://localhost:8000/topics/2/
+#http://localhost:8000/topics/
+#http://localhost:8000/new_topic/
+#http://localhost:8000/topics/1/
