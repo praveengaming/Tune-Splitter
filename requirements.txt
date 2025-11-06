@@ -2,7 +2,5 @@ fastapi
 uvicorn
 python-multipart
 ffmpeg-python
-pydub
+demucs==4.0.0
 apscheduler
-  # <--- CRITICAL: Pinning this version
-spleeter==2.1.0
