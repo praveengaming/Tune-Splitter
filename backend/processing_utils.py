@@ -43,7 +43,7 @@ def separate_audio(audio_path, output_dir):
     try:
         ensure_dir(output_dir)
 
-        print("🎧 Starting Spleeter separation...")
+        print("🎧 Using Spleeter separation...")
 
         # Load the 2-stem model (vocals + accompaniment)
         separator = Separator("spleeter:2stems")
@@ -51,7 +51,7 @@ def separate_audio(audio_path, output_dir):
         # Separate the audio
         separator.separate_to_file(str(audio_path), str(output_dir))
 
-        # Get the paths of the generated files
+        # Find output files
         vocal_file = next(Path(output_dir).rglob("vocals.wav"), None)
         background_file = next(Path(output_dir).rglob("accompaniment.wav"), None)
 
