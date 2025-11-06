@@ -7,11 +7,11 @@ python-multipart==0.0.9
 pydub==0.25.1
 ffmpeg-python==0.2.0
 demucs==4.0.1
-spleeter==2.4.0
+spleeter==2.3.2  
 
 # Background tasks
 apscheduler==3.10.4
 
-# Optional helpers (recommended)
+# Optional helpers
 numpy==1.26.4
-torch==2.2.2
+torch
