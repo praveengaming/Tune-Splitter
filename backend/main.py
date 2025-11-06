@@ -6,21 +6,16 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from datetime import datetime, timedelta
-
-# ➡️ NEW IMPORT for scheduling background tasks
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# Ensure ffmpeg is on PATH... (existing code)
-os.environ['TORCH_USE_FFMPEG'] = '1'
-
-
-
-from .processing_utils import extract_audio, separate_audio, cleanup_files
+# Import utility functions from your local file
+# Assuming processing_utils.py is in the same directory or correctly imported
+from .processing_utils import extract_audio, separate_audio, cleanup_files 
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Configure CORS (existing code)
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,8 +28,13 @@ app.add_middleware(
 TEMP_DIR = Path("temp")
 TEMP_DIR.mkdir(exist_ok=True)
 
+# Set environment variable for the underlying libraries (like Spleeter/FFmpeg-Python)
+# This is often done but doesn't fix a missing executable.
+# It just ensures internal library calls use the correct pathing internally.
+os.environ['TORCH_USE_FFMPEG'] = '1'
+
 # ------------------------------------------------
-# ➡️ NEW: Scheduled Cleanup Function
+# Scheduled Cleanup Function
 # ------------------------------------------------
 def automatic_cleanup(minutes_threshold=30):
     """Deletes all session folders in temp/ older than the specified time."""
@@ -43,11 +43,9 @@ def automatic_cleanup(minutes_threshold=30):
     
     deleted_count = 0
     
-    # Iterate over all session directories inside temp/
     for session_dir in TEMP_DIR.iterdir():
         if session_dir.is_dir():
             try:
-                # Use the directory's last modification time (st_mtime)
                 mod_time = datetime.fromtimestamp(session_dir.stat().st_mtime)
                 
                 if mod_time < threshold_time:
@@ -58,23 +56,19 @@ def automatic_cleanup(minutes_threshold=30):
                 print(f"Error during cleanup of {session_dir.name}: {e}")
 
     print(f"Automatic cleanup finished. Deleted {deleted_count} old sessions.")
-# ------------------------------------------------
-
 
 # Initialize the scheduler
 scheduler = AsyncIOScheduler()
 
-# ➡️ NEW: Event to start the scheduler when the FastAPI app starts up
+# Event to start the scheduler
 @app.on_event("startup")
 async def start_scheduler():
-    # Schedule the cleanup function to run every 30 minutes
     scheduler.add_job(automatic_cleanup, 'interval', minutes=30)
     scheduler.start()
     print("Background cleanup scheduler started.")
-    # Run cleanup once on startup to clear any leftover files from a previous run/crash
     automatic_cleanup(minutes_threshold=30) 
 
-# ➡️ NEW: Event to stop the scheduler when the FastAPI app shuts down
+# Event to stop the scheduler
 @app.on_event("shutdown")
 async def stop_scheduler():
     scheduler.shutdown()
@@ -82,7 +76,7 @@ async def stop_scheduler():
 
 
 # ------------------------------------------------
-# Existing FastAPI Routes (upload_media, serve-file, etc.)
+# FastAPI Routes
 # ------------------------------------------------
 
 @app.post("/upload-media/")
@@ -93,19 +87,27 @@ async def upload_media(file: UploadFile = File(...)):
 
     video_path = session_dir / file.filename 
     audio_path = session_dir / "extracted_audio.wav"
-    demucs_output_dir = session_dir / "separated"
+    
+    # Rename for clarity: This output directory is for Spleeter's results
+    spleeter_output_dir = session_dir / "separated" 
 
     try:
+        # Save uploaded file
         with open(video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        # 1. Extract Audio (uses ffmpeg system executable)
         if not extract_audio(video_path, audio_path):
-            raise HTTPException(status_code=500, detail="Audio extraction/transcoding failed.")
+            raise HTTPException(status_code=500, detail="Audio extraction/transcoding failed. Is FFmpeg installed?")
 
-        vocal_file, background_file = separate_audio(audio_path, demucs_output_dir)
+        # 2. Separate Audio (uses Spleeter/TensorFlow)
+        # Note: If the demucs error persists, it's occurring inside separate_audio()
+        vocal_file, background_file = separate_audio(audio_path, spleeter_output_dir)
         if not vocal_file or not background_file:
-            raise HTTPException(status_code=500, detail="Audio separation failed.")
+            # We catch the error in the utility function and re-raise a generic 500
+            raise HTTPException(status_code=500, detail="Audio separation failed. Check Spleeter logs.")
 
+        # 3. Success Response
         return JSONResponse({
             "status": "success",
             "vocals_url": f"/serve-file/{session_id}/{vocal_file.name}",
@@ -114,18 +116,26 @@ async def upload_media(file: UploadFile = File(...)):
             "background_download_url": f"/download-file/{session_id}/{background_file.name}",
             "session_id": session_id
         })
+    except HTTPException:
+        # Re-raise explicit HTTP exceptions (like the 500s above)
+        raise
     except Exception as e:
+        # Catch all other exceptions, log, and clean up the session
         cleanup_files([session_dir])
+        # The log line that includes the demucs error
         print(f"Error during processing: {e}") 
-        raise HTTPException(status_code=500, detail=f"Processing failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Processing failed due to an internal error.") # Provide a safe message
         
 @app.get("/")
+# Add handling for HEAD requests to prevent 405 Method Not Allowed in logs
+@app.head("/") 
 def root():
     return {"message": "FastAPI media processing API is running!"}
 
 @app.get("/serve-file/{session_id}/{filename}")
 async def serve_file(session_id: str, filename: str):
     """Serves a processed file for playback."""
+    # Note: Search must look in the directory *containing* the files, not the root of the session
     session_dir = TEMP_DIR / session_id / "separated"
     candidates = list(session_dir.rglob(filename))
     if not candidates:
@@ -149,7 +159,3 @@ async def clean_session(session_id: str):
         cleanup_files([session_dir])
         return {"status": "success", "message": "Session files cleaned up."}
     return {"status": "not found", "message": "Session not found."}
-
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=10000)
