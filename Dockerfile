@@ -1,28 +1,46 @@
-# Use a highly stable Python 3.10 base image
+# --------------------------------------------------------
+# 1️⃣ Use a stable and minimal Python base image
+# --------------------------------------------------------
 FROM python:3.10-slim
 
-# 1. Install System Dependencies (FFmpeg and libsndfile1 for audio)
+# --------------------------------------------------------
+# 2️⃣ Install required system dependencies
+# --------------------------------------------------------
 RUN apt-get update && \
     apt-get install -y ffmpeg git libsndfile1 && \
     rm -rf /var/lib/apt/lists/*
 
+# --------------------------------------------------------
+# 3️⃣ Set working directory
+# --------------------------------------------------------
 WORKDIR /app
+
+# --------------------------------------------------------
+# 4️⃣ Copy and install Python dependencies
+# --------------------------------------------------------
 COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. Install Dependencies (Stabilizing pip install)
-# Combining and simplifying the installation step for robustness
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# --------------------------------------------------------
+# 5️⃣ Pre-cache Demucs models to avoid runtime downloads
+# --------------------------------------------------------
+# Using “--list-models” triggers model verification and caching
+RUN python3 -m demucs --list-models && \
+    python3 -m demucs -n htdemucs --list-models && \
+    python3 -m demucs -n mdx_extra --list-models
 
-# 3. Cache Demucs Models (CRITICAL: Prevents runtime timeout/crash)
-# This downloads the models once during the build, using the model names
-# that demucs saves locally.
-RUN python3 -m demucs.separate -n htdemucs --url "" && \
-    python3 -m demucs.separate -n mdx_extra --url ""
-
+# --------------------------------------------------------
+# 6️⃣ Copy the remaining application files
+# --------------------------------------------------------
 COPY . .
 
-# 4. Set Command (Ensures the path matches your project structure)
-# Your traceback indicates the main file is inside a 'backend' folder.
+# --------------------------------------------------------
+# 7️⃣ Expose the app port
+# --------------------------------------------------------
 EXPOSE 10000
+
+# --------------------------------------------------------
+# 8️⃣ Start the FastAPI app with Uvicorn (Render compatible)
+# --------------------------------------------------------
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000"]
