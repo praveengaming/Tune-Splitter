@@ -1,17 +1,12 @@
 # Web framework
-fastapi==0.115.2
-uvicorn==0.30.1
-python-multipart==0.0.9
+fastapi
+uvicorn
+python-multipart
 
-# Audio processing
-pydub==0.25.1
-ffmpeg-python==0.2.0
-demucs==4.0.1
-spleeter==2.3.2  
+# Audio tools
+ffmpeg-python
+pydub
+spleeter==2.3.2
 
-# Background tasks
-apscheduler==3.10.4
-
-# Optional helpers
-numpy==1.26.4
-torch
+# Background scheduler
+apscheduler
