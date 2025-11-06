@@ -5,4 +5,4 @@ ffmpeg-python
 pydub
 apscheduler
   # <--- CRITICAL: Pinning this version
-spleeter==2.3.2
+spleeter==2.1.0
