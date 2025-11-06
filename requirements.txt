@@ -4,5 +4,5 @@ python-multipart
 ffmpeg-python
 pydub
 apscheduler
-tensorflow==2.5.0  # <--- CRITICAL: Pinning this version
+  # <--- CRITICAL: Pinning this version
 spleeter==2.3.2
