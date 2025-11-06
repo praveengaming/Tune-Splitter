@@ -1,199 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 Audio & Video Processor - Tune Splitter</title>
-    
-    <meta name="description" content="Extract vocals and background music from videos instantly. Free, fast, and secure audio separation tool." />
-    <meta name="author" content="Splitify" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎵 Tune Splitter — Audio & Video Processor</title>
 
-    <meta property="og:title" content="Splitify - Video to Audio Processor" />
-    <meta property="og:description" content="Extract vocals and background music from videos instantly. Free audio separation tool." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  <meta
+    name="description"
+    content="Extract vocals and background music from videos instantly. Free, fast, and secure audio separation tool."
+  />
+  <meta name="author" content="Praveen Jagu" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <link rel="stylesheet" href="style.css">
+  <meta property="og:title" content="Tune Splitter - Free Vocal Remover" />
+  <meta
+    property="og:description"
+    content="Extract vocals and background music from your videos and songs instantly — all online, free, and secure."
+  />
+  <meta property="og:type" content="website" />
+  <meta
+    property="og:image"
+    content="https://lovable.dev/opengraph-image-p98pqg.png"
+  />
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header class="app-header">
+    <div class="logo">
+      <span class="logo-icon">🎵</span> Tune Splitter
+    </div>
+  </header>
 
-    <header class="app-header">
-        <div class="logo">
-            <span class="logo-icon">🎵</span> Tune Splitter <span class="logo-product"></span>
+  <div class="container main-card-wrapper">
+    <h1 class="main-title">🎧 Audio & Video Processor</h1>
+
+    <div class="privacy-bar">
+      <span class="privacy-icon">🔒</span> 100% Secure — Files are processed
+      temporarily and deleted automatically after 30 minutes.
+    </div>
+
+    <div class="upload-section">
+      <input
+        type="file"
+        id="videoFile"
+        accept="video/*,audio/mp3,audio/mpeg"
+      />
+      <button id="uploadButton" disabled>Process Media</button>
+    </div>
+
+    <div id="progress" class="hidden">
+      <div class="spinner"></div>
+      <p>Processing... please wait 🎵</p>
+    </div>
+
+    <div id="results" class="hidden">
+      <h2>Results</h2>
+      <div class="audio-players">
+        <div class="player-container">
+          <h3>Vocals</h3>
+          <audio id="vocalsAudio" controls></audio>
+          <a
+            id="vocalsDownload"
+            class="download-link"
+            download="vocals.wav"
+            target="_blank"
+            >Download Vocals</a
+          >
         </div>
-    </header>
-
-    <div class="container main-card-wrapper">
-        <h1 class="main-title">
-            <span class="title-icon">🎵</span> Video & Audio Processor
-        </h1>
-
-        <div class="privacy-bar">
-            <span class="privacy-icon">◷</span> Everything happens on your device — we don't save your files. Your data stays yours!
+        <div class="player-container">
+          <h3>Music</h3>
+          <audio id="backgroundAudio" controls></audio>
+          <a
+            id="backgroundDownload"
+            class="download-link"
+            download="music.wav"
+            target="_blank"
+            >Download Music</a
+          >
         </div>
+      </div>
+      <button id="cleanUpButton">Clean Up</button>
+    </div>
 
-        <div class="upload-section">
-            <input type="file" id="videoFile" accept="video/*,audio/mp3,audio/mpeg">
-            <button id="uploadButton" disabled>Process Media</button>
-        </div>
-        
-        <div id="progress" class="hidden">
-        
-            <div class="spinner"></div>
-        </div>
+    <div id="messageArea" style="margin-top: 20px; color: #0066cc"></div>
+  </div>
 
-        <div id="results" class="hidden">
-            <h2>Results</h2>
-            <div class="audio-players">
-                <div class="player-container">
-                    <h3>Vocals </h3>
-                    <audio id="vocalsAudio" controls></audio>
-                    <a id="vocalsDownload" class="download-link" download="vocals.wav">Download Vocals</a>
-                </div>
-                <div class="player-container">
-                    <h3>Music</h3>
-                    <audio id="backgroundAudio" controls></audio>
-                    <a id="backgroundDownload" class="download-link" download="Music.wav">Download Music</a>
-                </div>
-            </div>
-            <button id="cleanUpButton">Clean Up</button>
-        </div>
-        
-        <div id="messageArea" style="margin-top: 20px; color: #cc0000;"></div>
-        
-    </div> <footer class="app-footer">
-        &copy; 2025 Tune Splitter - Free & Open Audio Tool
-    </footer>
+  <footer class="app-footer">
+    &copy; 2025 Tune Splitter — Free & Open Audio Tool
+  </footer>
 
-    <script>
-        const API_BASE_URL = 'http://127.0.0.1:8000'; // Define the base URL once
-        
-        const uploadButton = document.getElementById('uploadButton');
-        const videoFile = document.getElementById('videoFile');
-        const progressDiv = document.getElementById('progress');
-        const resultsDiv = document.getElementById('results');
-        const messageArea = document.getElementById('messageArea');
-        const vocalsAudio = document.getElementById('vocalsAudio');
-        const backgroundAudio = document.getElementById('backgroundAudio');
-        const vocalsDownload = document.getElementById('vocalsDownload');
-        const backgroundDownload = document.getElementById('backgroundDownload');
-        const cleanUpButton = document.getElementById('cleanUpButton');
+  <script>
+    // ✅ Updated for Render live backend
+    const API_BASE_URL = "https://tune-splitter.onrender.com";
 
-        let currentSessionId = null;
+    const uploadButton = document.getElementById("uploadButton");
+    const videoFile = document.getElementById("videoFile");
+    const progressDiv = document.getElementById("progress");
+    const resultsDiv = document.getElementById("results");
+    const messageArea = document.getElementById("messageArea");
+    const vocalsAudio = document.getElementById("vocalsAudio");
+    const backgroundAudio = document.getElementById("backgroundAudio");
+    const vocalsDownload = document.getElementById("vocalsDownload");
+    const backgroundDownload = document.getElementById("backgroundDownload");
+    const cleanUpButton = document.getElementById("cleanUpButton");
 
-        // Function to display messages/errors
-        const displayMessage = (msg, isError = false) => {
-            messageArea.textContent = msg;
-            // 🎨 Corrected: Changed green '#007000' to sky blue HSL value
-            messageArea.style.color = isError ? '#cc0000' : 'hsla(249, 80%, 44%, 1.00)'; 
+    let currentSessionId = null;
+
+    const displayMessage = (msg, isError = false) => {
+      messageArea.textContent = msg;
+      messageArea.style.color = isError ? "#cc0000" : "#0066cc";
+    };
+
+    // Enable button when file selected
+    videoFile.addEventListener("change", () => {
+      uploadButton.disabled = videoFile.files.length === 0;
+      resultsDiv.classList.add("hidden");
+      progressDiv.classList.add("hidden");
+      displayMessage(
+        videoFile.files.length > 0
+          ? `Ready to process: ${videoFile.files[0].name}`
+          : "Please select a media file."
+      );
+    });
+
+    // Upload logic
+    uploadButton.addEventListener("click", async () => {
+      const file = videoFile.files[0];
+      if (!file) {
+        displayMessage("Error: Please select a media file first.", true);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      uploadButton.disabled = true;
+      resultsDiv.classList.add("hidden");
+      progressDiv.classList.remove("hidden");
+      displayMessage("Uploading and processing... please wait 🎧");
+
+      if (currentSessionId) {
+        fetch(`${API_BASE_URL}/clean-session/${currentSessionId}`);
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/upload-media/`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errData = await response
+            .json()
+            .catch(() => ({ detail: "Server error occurred." }));
+          throw new Error(
+            `Processing Failed (Status ${response.status}): ${errData.detail}`
+          );
         }
-        
-        // 1. Enable/Disable the button when a file is selected
-        videoFile.addEventListener('change', () => {
-            uploadButton.disabled = videoFile.files.length === 0;
-            resultsDiv.classList.add('hidden');
-            progressDiv.classList.add('hidden');
-            displayMessage(videoFile.files.length > 0 ? `Ready to process: ${videoFile.files[0].name}` : 'Please select a media file.');
-        });
-        
-        // 2. Main processing logic
-        uploadButton.addEventListener('click', async () => {
-            const file = videoFile.files[0];
-            if (!file) {
-                displayMessage("Error: Please select a media file first.", true);
-                return;
-            }
 
-            const formData = new FormData();
-            formData.append('file', file);
+        const data = await response.json();
 
-            // Set UI to loading state
-            uploadButton.disabled = true;
-            resultsDiv.classList.add('hidden');
-            progressDiv.classList.remove('hidden');
-            displayMessage("Processing your file... Please wait. This may take a few minutes. 🎧", false);
-            
-            // Clean up previous session (fire and forget)
-            if (currentSessionId) {
-                fetch(`${API_BASE_URL}/clean-session/${currentSessionId}`);
-            }
+        if (data.status === "success") {
+          currentSessionId = data.session_id;
 
-            try {
-                // 🔑 CHANGE 2: Updated the endpoint to /upload-media/
-                const response = await fetch(`${API_BASE_URL}/upload-media/`, {
-                    method: 'POST',
-                    body: formData,
-                });
+          vocalsAudio.src = `${API_BASE_URL}${data.vocals_url}`;
+          backgroundAudio.src = `${API_BASE_URL}${data.background_url}`;
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Server error occurred.' }));
-                    throw new Error(`Processing Failed (Status ${response.status}): ${errorData.detail}`);
-                }
+          vocalsDownload.href = `${API_BASE_URL}${data.vocals_download_url}`;
+          backgroundDownload.href = `${API_BASE_URL}${data.background_download_url}`;
 
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    currentSessionId = data.session_id;
+          progressDiv.classList.add("hidden");
+          resultsDiv.classList.remove("hidden");
+          displayMessage("✅ Processing complete! Ready to play or download.");
+        } else {
+          throw new Error(data.detail || "Unknown error during processing.");
+        }
+      } catch (error) {
+        displayMessage("Error processing media: " + error.message, true);
+        progressDiv.classList.add("hidden");
+      } finally {
+        uploadButton.disabled = false;
+      }
+    });
 
-                    // Set audio player sources (using serve-file for playback)
-                    vocalsAudio.src = `${API_BASE_URL}${data.vocals_url}`;
-                    backgroundAudio.src = `${API_BASE_URL}${data.background_url}`;
-                    
-                    // Set download link hrefs (using download-file for proper download headers)
-                    vocalsDownload.href = `${API_BASE_URL}${data.vocals_download_url}`;
-                    backgroundDownload.href = `${API_BASE_URL}${data.background_download_url}`;
-                    
-                    // Set UI to success state
-                    progressDiv.classList.add('hidden');
-                    resultsDiv.classList.remove('hidden');
-                    displayMessage("Processing complete! Audio streams ready. ✅", false);
+    // Clean-up logic
+    cleanUpButton.addEventListener("click", async () => {
+      if (!currentSessionId) return;
 
-                } else {
-                    // This handles cases where FastAPI returns 200 but data.status is not 'success'
-                    throw new Error(data.detail || "Unknown error during processing.");
-                }
+      if (
+        !confirm(
+          "Are you sure you want to clean up files? You won’t be able to access them later."
+        )
+      )
+        return;
 
-            } catch (error) {
-                displayMessage("Error processing media: " + error.message, true);
-                progressDiv.classList.add('hidden');
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/clean-session/${currentSessionId}`
+        );
+        const data = await response.json();
 
-            } finally {
-                uploadButton.disabled = false;
-            }
-        });
-        
-        // 3. Cleanup logic
-        cleanUpButton.addEventListener('click', async () => {
-            if (currentSessionId) {
-                if (!confirm("Are you sure you want to clean up files? You won't be able to access them after.")) {
-                    return;
-                }
-                
-                try {
-                    const response = await fetch(`${API_BASE_URL}/clean-session/${currentSessionId}`);
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        displayMessage("Session files have been cleaned up. Upload a new video.", false);
-                        resultsDiv.classList.add('hidden');
-                        currentSessionId = null;
-                        vocalsAudio.src = '';
-                        backgroundAudio.src = '';
-                        videoFile.value = ''; // Clear file input
-                        uploadButton.disabled = true;
-                    } else {
-                        displayMessage("Cleanup failed: " + data.message, true);
-                    }
-                } catch (error) {
-                    displayMessage("Error during cleanup: " + error.message, true);
-                }
-            }
-        });
-    </script>
-
+        if (data.status === "success") {
+          displayMessage("Session cleaned up successfully.", false);
+          resultsDiv.classList.add("hidden");
+          currentSessionId = null;
+          vocalsAudio.src = "";
+          backgroundAudio.src = "";
+          videoFile.value = "";
+          uploadButton.disabled = true;
+        } else {
+          displayMessage("Cleanup failed: " + data.message, true);
+        }
+      } catch (error) {
+        displayMessage("Error during cleanup: " + error.message, true);
+      }
+    });
+  </script>
 </body>
 </html>
