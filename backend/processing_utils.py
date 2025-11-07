@@ -1,11 +1,15 @@
 # -------------------------------
 # ✅ Import Dependencies
 # -------------------------------
+# -------------------------------
+# ✅ Import Dependencies
+# -------------------------------
 import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"  # Suppress TF info/warnings
 import shutil
 import subprocess
 from pathlib import Path
-from spleeter.separator import Separator  # ✅ Lightweight Spleeter import
+from spleeter.separator import Separator
 
 # -------------------------------
 # ⚙️ Configuration
