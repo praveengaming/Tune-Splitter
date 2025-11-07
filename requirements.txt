@@ -5,3 +5,5 @@ ffmpeg-python
 spleeter
 pydub
 apscheduler
+tensorflow==2.12.0
+numpy<2
