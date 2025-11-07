@@ -1,19 +1,22 @@
+# -------------------------------
+# ✅ Import Dependencies
+# -------------------------------
 import os
+import sys
 import shutil
 import subprocess
 from pathlib import Path
-from demucs.api import Separator # 🛠️ CORRECT IMPORT for Python API
+from demucs.separate import main as demucs_main  # ✅ Correct for Demucs v4+
 
 # === Configuration ===
 # Use the best model you've pre-cached in your Dockerfile (mdx_extra is recommended)
-DEMUCS_MODEL = "mdx_extra" 
-# Use 'cpu' as you are on the Render Free/Standard tier without a GPU
-DEMUCS_DEVICE = "cpu"
+DEMUCS_MODEL = "htdemucs"   # or "mdx_extra"
+DEMUCS_DEVICE = "cpu"  
 
 # === Utility Functions ===
 
-def ensure_dir(dir_path):
-    Path(dir_path).mkdir(exist_ok=True, parents=True)
+def ensure_dir(path: Path):
+    path.mkdir(parents=True, exist_ok=True)
 
 
 def cleanup_files(file_paths):
@@ -62,28 +65,29 @@ def extract_audio(video_path, audio_path):
 
 def separate_audio(audio_path: Path, output_dir: Path):
     """
-    Separates audio into vocals and background music using the Demucs Python API.
+    Separates audio into vocals and background music using Demucs v4 CLI API.
     """
     try:
         ensure_dir(output_dir)
-
         print(f"🎧 Starting Demucs separation (Model: {DEMUCS_MODEL}, Device: {DEMUCS_DEVICE})...")
-        
-        # 1. Initialize the Separator
-        # The 'stems=2' setting ensures it separates into vocals and 'no_vocals'
-        separator = Separator(model=DEMUCS_MODEL, device=DEMUCS_DEVICE, stems=2)
-        
-        # 2. Run the separation
-        # Demucs will save files inside output_dir/model_name/track_name/...
-        # The save_path argument saves the results directly to disk.
-        separator.separate_files([audio_path], save_path=str(output_dir))
 
-        # 3. Determine the final output directory path created by Demucs
-        # Example output structure: output_dir/mdx_extra/extracted_audio/
+        # 1️⃣ Build demucs CLI args
+        sys.argv = [
+            "demucs",
+            "-n", DEMUCS_MODEL,
+            "--two-stems=vocals",
+            "--device", DEMUCS_DEVICE,
+            "-o", str(output_dir),
+            str(audio_path)
+        ]
+
+        # 2️⃣ Run separation
+        demucs_main()
+
+        # 3️⃣ Locate generated output files
         input_stem = audio_path.stem
-        final_output_path = output_dir / DEMUCS_MODEL / input_stem 
+        final_output_path = output_dir / DEMUCS_MODEL / input_stem
 
-        # 4. Find resulting files
         vocal_file = final_output_path / "vocals.wav"
         background_file = final_output_path / "no_vocals.wav"
 
@@ -91,12 +95,11 @@ def separate_audio(audio_path: Path, output_dir: Path):
             print("✅ Separation successful!")
             return vocal_file, background_file
         else:
-            print(f"❌ Could not find separated files in expected location: {final_output_path}")
-            # Recursively search the output_dir just in case Demucs changed the naming slightly
-            vocal_file_r = next(Path(output_dir).rglob("vocals.wav"), None)
-            background_file_r = next(Path(output_dir).rglob("no_vocals.wav"), None)
+            print(f"⚠️ Could not find expected files, searching recursively...")
+            vocal_file_r = next(output_dir.rglob("vocals.wav"), None)
+            background_file_r = next(output_dir.rglob("no_vocals.wav"), None)
             return vocal_file_r, background_file_r
 
     except Exception as e:
-        print(f"Error during Demucs separation: {e}")
+        print(f"❌ Error during Demucs separation: {e}")
         return None, None
