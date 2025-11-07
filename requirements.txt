@@ -2,5 +2,6 @@ fastapi
 uvicorn
 python-multipart
 ffmpeg-python
-demucs==4.0.1
+spleeter
+pydub
 apscheduler
