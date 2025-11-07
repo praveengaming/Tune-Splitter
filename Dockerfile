@@ -1,38 +1,36 @@
 # --------------------------------------------------------
-# ✅ Lightweight base image
+# ✅ Stable, Optimized Dockerfile for Demucs + FastAPI
 # --------------------------------------------------------
 FROM python:3.10-slim
 
-# --------------------------------------------------------
-# ✅ Install only essential system dependencies
-# --------------------------------------------------------
+# 1️⃣ Install system dependencies
 RUN apt-get update && \
-    apt-get install -y ffmpeg libsndfile1 && \
+    apt-get install -y ffmpeg git libsndfile1 && \
     rm -rf /var/lib/apt/lists/*
 
-# --------------------------------------------------------
-# ✅ Set working directory
-# --------------------------------------------------------
+# 2️⃣ Set working directory
 WORKDIR /app
 
-# --------------------------------------------------------
-# ✅ Copy and install Python dependencies
-# --------------------------------------------------------
+# 3️⃣ Copy and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# --------------------------------------------------------
-# ✅ Copy the rest of your app
-# --------------------------------------------------------
+# 4️⃣ Pre-cache Demucs models (optional but faster first run)
+RUN python3 - <<'PYTHON'
+from demucs.pretrained import get_model
+for model_name in ["htdemucs", "mdx_extra"]:
+    print(f"🔹 Downloading Demucs model: {model_name}")
+    model = get_model(model_name)
+    model.cpu()
+print("✅ All Demucs models cached successfully.")
+PYTHON
+
+# 5️⃣ Copy app source
 COPY . .
 
-# --------------------------------------------------------
-# ✅ Expose port (Render expects dynamic port 10000)
-# --------------------------------------------------------
+# 6️⃣ Expose API port
 EXPOSE 10000
 
-# --------------------------------------------------------
-# ✅ Start FastAPI app (Free-tier compatible)
-# --------------------------------------------------------
+# 7️⃣ Start FastAPI app
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "10000"]
