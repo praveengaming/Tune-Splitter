@@ -29,7 +29,7 @@
         </h1>
 
         <div class="privacy-bar">
-            <span class="privacy-icon">🔒</span> 100% Secure — Files are processed temporarily and deleted automatically after 30 minutes.
+            <span class="privacy-icon">◷</span> Everything happens on your device — we don't save your files. Your data stays yours!
         </div>
 
         <div class="upload-section">
@@ -39,7 +39,7 @@
         
         <div id="progress" class="hidden">
             <div class="spinner"></div>
-            <p>Processing... please wait 🎵</p>
+            
         </div>
 
         <div id="results" class="hidden">
@@ -87,7 +87,7 @@
 
         const displayMessage = (msg, isError = false) => {
             messageArea.textContent = msg;
-            messageArea.style.color = isError ? '#cc0000' : '#0066cc';
+            messageArea.style.color = isError ? '#cc0000' : '#6633cc';
         }
 
         videoFile.addEventListener('change', () => {
