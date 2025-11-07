@@ -2,22 +2,21 @@
 # ✅ Import Dependencies
 # -------------------------------
 import os
-import sys
 import shutil
 import subprocess
 from pathlib import Path
-from demucs.separate import main as demucs_main  # ✅ Correct import for Demucs v4+
+from spleeter.separator import Separator  # ✅ Lightweight Spleeter import
 
 # -------------------------------
 # ⚙️ Configuration
 # -------------------------------
-DEMUCS_MODEL = "mdx_extra"  # or "htdemucs" / "mdx_q"
-DEMUCS_DEVICE = "cpu"       # Use "cuda" if GPU available
+SPLEETER_MODEL = "spleeter:2stems"  # 2 stems = vocals + accompaniment
 
 # -------------------------------
 # 🧩 Utility Functions
 # -------------------------------
 def ensure_dir(path: Path):
+    """Ensure a directory exists."""
     path.mkdir(parents=True, exist_ok=True)
 
 def cleanup_files(file_paths):
@@ -35,7 +34,9 @@ def cleanup_files(file_paths):
 # 🎧 Core Audio Processing
 # -------------------------------
 def extract_audio(video_path: Path, audio_path: Path) -> bool:
-    """Extracts or converts audio from video using FFmpeg."""
+    """
+    Extracts or converts audio from video using FFmpeg.
+    """
     try:
         subprocess.run(
             [
@@ -62,36 +63,34 @@ def extract_audio(video_path: Path, audio_path: Path) -> bool:
 
 
 def separate_audio(audio_path: Path, output_dir: Path):
-    """Separates audio into vocals and background using Demucs CLI API."""
+    """
+    Separates audio into vocals and background using Spleeter (Free Plan Safe).
+    """
     try:
         ensure_dir(output_dir)
-        print(f"🎧 Running Demucs (Model: {DEMUCS_MODEL}, Device: {DEMUCS_DEVICE})")
+        print(f"🎵 Running Spleeter separation (Model: {SPLEETER_MODEL})...")
 
-        sys.argv = [
-            "demucs",
-            "-n", DEMUCS_MODEL,
-            "--two-stems=vocals",
-            "--device", DEMUCS_DEVICE,
-            "-o", str(output_dir),
-            str(audio_path)
-        ]
-        demucs_main()
+        # Initialize Spleeter separator
+        separator = Separator(SPLEETER_MODEL)
 
-        # Locate generated output
-        input_stem = audio_path.stem
-        final_output_path = output_dir / DEMUCS_MODEL / input_stem
+        # Perform separation and save output files
+        separator.separate_to_file(str(audio_path), str(output_dir))
 
-        vocals = final_output_path / "vocals.wav"
-        background = final_output_path / "no_vocals.wav"
+        # Locate generated output files
+        song_name = Path(audio_path).stem
+        vocals = Path(output_dir) / song_name / "vocals.wav"
+        background = Path(output_dir) / song_name / "accompaniment.wav"
 
         if vocals.exists() and background.exists():
             print("✅ Separation successful!")
             return vocals, background
         else:
-            print(f"⚠️ Output not found at {final_output_path}. Searching recursively...")
-            vocals_fallback = next(output_dir.rglob("vocals.wav"), None)
-            background_fallback = next(output_dir.rglob("no_vocals.wav"), None)
-            return vocals_fallback, background_fallback
+            print(f"⚠️ Output files not found at expected path: {output_dir}")
+            # fallback search
+            vocals_r = next(output_dir.rglob("vocals.wav"), None)
+            background_r = next(output_dir.rglob("accompaniment.wav"), None)
+            return vocals_r, background_r
+
     except Exception as e:
-        print(f"❌ Error during Demucs separation: {e}")
+        print(f"❌ Error during Spleeter separation: {e}")
         return None, None

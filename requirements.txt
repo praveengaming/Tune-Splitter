@@ -2,9 +2,6 @@ fastapi
 uvicorn
 python-multipart
 ffmpeg-python
-demucs==4.0.1
-torch>=1.13.0
-torchaudio>=0.13.0
-numpy<2
-apscheduler
+spleeter
 pydub
+apscheduler
